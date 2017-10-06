@@ -34,6 +34,38 @@ describe Acme::FriendshipAPI do
           expect(response.body).to eq({success: true}.to_json)
         end
       end
+
+      context 'when not given 2 email addresses' do
+        let(:friends) { [] }
+
+        it 'returns 400' do
+          subject
+
+          expect(response).to have_http_status(:bad_request)
+        end
+
+        it 'returns an error' do
+          subject
+
+          expect(response.body).to eq({error: 'friends must consist of exactly 2 elements.'}.to_json)
+        end
+      end
+
+      context 'when given invalid email addresses' do
+        let(:friends) { ['a@example.com', 'invalid email'] }
+
+        it 'returns 400' do
+          subject
+
+          expect(response).to have_http_status(:bad_request)
+        end
+
+        it 'returns an error' do
+          subject
+
+          expect(response.body).to eq({error: 'friends must only consist of valid email addresses.'}.to_json)
+        end
+      end
     end
   end
 end
