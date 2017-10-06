@@ -1,4 +1,5 @@
 require 'size'
+require 'valid_email'
 require 'valid_emails'
 
 module Acme
@@ -11,6 +12,12 @@ module Acme
       post do
         {success: true}
       end
+
+      params do
+        requires :email, type: String, valid_email: true, fail_fast: true
+      end
+
+      get {}
     end
   end
 end

@@ -68,4 +68,58 @@ describe Acme::FriendshipAPI do
       end
     end
   end
+
+  describe 'GET' do
+    context 'without params[:email]' do
+      subject { get '/api/friendship' }
+
+      it 'returns 400' do
+        subject
+
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it 'returns an error' do
+        subject
+
+        expect(response.body).to eq({error: 'email is missing'}.to_json)
+      end
+    end
+
+    context 'with params[:email]' do
+      subject { get '/api/friendship', params: {email: email} }
+
+      context 'when not given an email address' do
+        let(:email) { [] }
+
+        it 'returns 400' do
+          subject
+
+          expect(response).to have_http_status(:bad_request)
+        end
+
+        it 'returns an error' do
+          subject
+
+          expect(response.body).to eq({error: 'email is invalid'}.to_json)
+        end
+      end
+
+      context 'when given an invalid email address' do
+        let(:email) { 'invalid email' }
+
+        it 'returns 400' do
+          subject
+
+          expect(response).to have_http_status(:bad_request)
+        end
+
+        it 'returns an error' do
+          subject
+
+          expect(response.body).to eq({error: 'email must be a valid email address.'}.to_json)
+        end
+      end
+    end
+  end
 end
