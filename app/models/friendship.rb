@@ -6,7 +6,7 @@ class Friendship < ApplicationRecord
     user = User.find_or_create_by(email: user_email)
     friend = User.find_or_create_by(email: friend_email)
 
-    if user != friend
+    if user != friend && !user.blocks?(friend) && !friend.blocks?(user)
       user.friendships.find_or_create_by(friend: friend)
       friend.friendships.find_or_create_by(friend: user)
     end

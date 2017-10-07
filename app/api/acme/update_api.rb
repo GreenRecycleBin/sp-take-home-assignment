@@ -21,7 +21,16 @@ module Acme
           use :requestor_and_target
         end
 
-        post {}
+        post do
+          requestor = User.find_or_create_by(email: params[:requestor])
+          target = User.find_or_create_by(email: params[:target])
+
+          if requestor != target
+            requestor.blocks.find_or_create_by(target: target)
+          end
+
+          {success: true}
+        end
       end
     end
   end

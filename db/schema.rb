@@ -10,7 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171006112823) do
+ActiveRecord::Schema.define(version: 20171007150143) do
+
+  create_table "blocks", force: :cascade do |t|
+    t.integer "requestor_id"
+    t.integer "target_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["requestor_id", "target_id"], name: "index_blocks_on_requestor_id_and_target_id", unique: true
+  end
 
   create_table "friendships", force: :cascade do |t|
     t.integer "user_id"

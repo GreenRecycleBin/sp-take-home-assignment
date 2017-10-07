@@ -103,3 +103,9 @@ RSpec.configure do |config|
   Kernel.srand config.seed
 =end
 end
+
+def add_friendship(a, b)
+  unless post('/api/friendship', params: {friends: [a, b]}) == 201
+    raise "Failed to add friendship between #{a} and #{b}."
+  end
+end

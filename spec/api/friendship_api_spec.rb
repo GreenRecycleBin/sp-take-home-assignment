@@ -1,9 +1,3 @@
-def add_friendship(a, b)
-  unless post('/api/friendship', params: {friends: [a, b]}) == 201
-    raise "Failed to add friendship between #{a} and #{b}."
-  end
-end
-
 describe Acme::FriendshipAPI do
   describe 'POST' do
     context 'without params[:friends]' do

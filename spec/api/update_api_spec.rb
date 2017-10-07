@@ -231,6 +231,90 @@ describe Acme::UpdateAPI do
                 expect(response.body).to eq({error: 'target must be a valid email address.'}.to_json)
               end
             end
+
+            context 'when given an email address' do
+              let(:target) { 'b@example.com' }
+
+              it 'returns 201' do
+                subject
+
+                expect(response).to have_http_status(:created)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true}.to_json)
+              end
+
+              it 'disallows adding new friendship' do
+                subject
+
+                add_friendship(requestor, target)
+
+                get '/api/friendship', params: {email: requestor}
+
+                expect(response).to have_http_status(:ok)
+                expect(response.body).to eq({success: true, friends: [], count: 0}.to_json)
+
+                add_friendship(target, requestor)
+
+                get '/api/friendship', params: {email: target}
+
+                expect(response).to have_http_status(:ok)
+                expect(response.body).to eq({success: true, friends: [], count: 0}.to_json)
+              end
+
+              context 'when there is an existing friendship' do
+                before { add_friendship(requestor, target) }
+
+                it 'returns 201' do
+                  subject
+
+                  expect(response).to have_http_status(:created)
+                end
+
+                it 'returns the correct body' do
+                  subject
+
+                  expect(response.body).to eq({success: true}.to_json)
+                end
+
+                it 'does not affect it' do
+                  subject
+
+                  get '/api/friendship', params: {email: requestor}
+
+                  expect(response).to have_http_status(:ok)
+                  expect(response.body).to eq({success: true, friends: [target], count: 1}.to_json)
+
+                  get '/api/friendship', params: {email: target}
+
+                  expect(response).to have_http_status(:ok)
+                  expect(response.body).to eq({success: true, friends: [requestor], count: 1}.to_json)
+                end
+              end
+
+              context 'one cannot block oneself' do
+                let(:target) { requestor }
+
+                it 'returns 201' do
+                  subject
+
+                  expect(response).to have_http_status(:created)
+                end
+
+                it 'returns the correct body' do
+                  subject
+
+                  expect(response.body).to eq({success: true}.to_json)
+                end
+
+                it 'does not create any Block' do
+                  expect { subject }.not_to change { Block.where(target: target).count }
+                end
+              end
+            end
           end
         end
       end
