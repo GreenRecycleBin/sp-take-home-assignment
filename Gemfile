@@ -40,6 +40,7 @@ end
 
 group :test do
   gem 'rspec-its', '~> 1'
+  gem 'database_cleaner', '~> 1'
 end
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
