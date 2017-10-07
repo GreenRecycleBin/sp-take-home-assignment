@@ -13,13 +13,7 @@ module Acme
         user_email = params[:friends].first
         friend_email = params[:friends].last
 
-        user = User.find_or_create_by(email: user_email)
-        friend = User.find_or_create_by(email: friend_email)
-
-        if user != friend
-          user.friendships.find_or_create_by(friend: friend)
-          friend.friendships.find_or_create_by(friend: user)
-        end
+        Friendship.add(user_email: user_email, friend_email: friend_email)
 
         {success: true}
       end
