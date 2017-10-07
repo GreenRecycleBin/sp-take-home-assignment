@@ -125,6 +125,100 @@ describe Acme::UpdateAPI do
     end
   end
 
+  describe 'GET' do
+    context 'without params[:email]' do
+      subject { get '/api/update' }
+
+      it 'returns 400' do
+        subject
+
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it 'returns an error' do
+        subject
+
+        expect(response.body).to eq({error: 'sender is missing'}.to_json)
+      end
+    end
+
+    context 'without params[:text]' do
+      subject { get '/api/update', params: {sender: 'a@example.com'} }
+
+      it 'returns 400' do
+        subject
+
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it 'returns an error' do
+        subject
+
+        expect(response.body).to eq({error: 'text is missing'}.to_json)
+      end
+    end
+
+    context 'with params[:email]' do
+      subject { get '/api/update', params: {sender: sender} }
+
+      context 'when not given an email address' do
+        let(:sender) { [] }
+
+        it 'returns 400' do
+          subject
+
+          expect(response).to have_http_status(:bad_request)
+        end
+
+        it 'returns an error' do
+          subject
+
+          expect(response.body).to eq({error: 'sender is invalid'}.to_json)
+        end
+      end
+
+      context 'when given an invalid email address' do
+        let(:sender) { 'invalid email' }
+
+        it 'returns 400' do
+          subject
+
+          expect(response).to have_http_status(:bad_request)
+        end
+
+        it 'returns an error' do
+          subject
+
+          expect(response.body).to eq({error: 'sender must be a valid email address.'}.to_json)
+        end
+      end
+
+      context 'when given an email address' do
+        context 'with params[:text]' do
+          subject { get '/api/update', params: {sender: sender, text: text} }
+
+          let(:sender) { 'a@example.com' }
+
+          context 'when not given a String' do
+            let(:text) { [] }
+
+            it 'returns 400' do
+              subject
+
+              expect(response).to have_http_status(:bad_request)
+            end
+
+            it 'returns an error' do
+              subject
+
+              expect(response.body).to eq({error: 'text is invalid'}.to_json)
+            end
+          end
+        end
+      end
+    end
+  end
+
   describe 'block' do
     describe 'POST' do
       context 'without params[:requestor]' do

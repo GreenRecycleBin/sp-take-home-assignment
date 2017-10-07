@@ -16,6 +16,13 @@ module Acme
         {success: true}
       end
 
+      params do
+        requires :sender, type: String, valid_email: true, fail_fast: true
+        requires :text, type: String, fail_fast: true
+      end
+
+      get {}
+
       namespace :block do
         params do
           use :requestor_and_target
