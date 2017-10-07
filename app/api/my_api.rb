@@ -3,4 +3,5 @@ class MyAPI < Grape::API
   format :json
 
   mount Acme::FriendshipAPI
+  mount Acme::UpdateAPI
 end
