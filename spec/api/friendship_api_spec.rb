@@ -1,3 +1,9 @@
+def add_friendship(a, b)
+  unless post('/api/friendship', params: {friends: [a, b]}) == 201
+    raise "Failed to add friendship between #{a} and #{b}."
+  end
+end
+
 describe Acme::FriendshipAPI do
   describe 'POST' do
     context 'without params[:friends]' do
@@ -225,12 +231,6 @@ describe Acme::FriendshipAPI do
         end
       end
     end
-
-    def add_friendship(a, b)
-      unless post('/api/friendship', params: {friends: [a, b]}) == 201
-        raise "Failed to add friendship between #{a} and #{b}."
-      end
-    end
   end
 
   describe 'common' do
@@ -253,6 +253,71 @@ describe Acme::FriendshipAPI do
 
       context 'with params[:friends]' do
         subject { get '/api/friendship/common', params: {friends: friends} }
+
+        context 'when given two email addresses' do
+          let(:friends) { %w(a@example.com b@example.com) }
+
+          context 'when there are no common friends' do
+            it 'returns 200' do
+              subject
+
+              expect(response).to have_http_status(:ok)
+            end
+
+            it 'returns the correct body' do
+              subject
+
+              expect(response.body).to eq({success: true, friends: [], count: 0}.to_json)
+            end
+          end
+
+          context 'when there is one common friend' do
+            let(:common_friend_email) { 'c@example.com' }
+
+            before do
+              friends.each do |friend|
+                add_friendship(friend, common_friend_email)
+              end
+            end
+
+            it 'returns 200' do
+              subject
+
+              expect(response).to have_http_status(:ok)
+            end
+
+            it 'returns the correct body' do
+              subject
+
+              expect(response.body).to eq({success: true, friends: [common_friend_email], count: 1}.to_json)
+            end
+          end
+
+          context 'when there are many common friends' do
+            let(:common_friend_emails) { %w(c@example.com d@example.com) }
+
+            before do
+              friends.each do |friend|
+                common_friend_emails.each do |common_friend_email|
+                  add_friendship(friend, common_friend_email)
+                end
+              end
+            end
+
+            it 'returns 200' do
+              subject
+
+              expect(response).to have_http_status(:ok)
+            end
+
+            it 'returns the correct body' do
+              subject
+
+              expect(response.body).
+                to eq({success: true, friends: common_friend_emails, count: common_friend_emails.size}.to_json)
+            end
+          end
+        end
 
         context 'when not given 2 email addresses' do
           let(:friends) { [] }

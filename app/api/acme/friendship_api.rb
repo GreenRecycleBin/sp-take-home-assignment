@@ -39,7 +39,41 @@ module Acme
           use :friends
         end
 
-        get {}
+        get do
+          user_email = params[:friends].first
+          friend_email = params[:friends].last
+
+          user = User.find_by(email: user_email)
+          friend = User.find_by(email: friend_email)
+
+          column_name = 'common_friend_id'
+
+          query = <<~SQL
+          SELECT friendships1.friend_id AS #{column_name}
+          FROM (
+            SELECT *
+            FROM friendships
+            WHERE user_id = $1
+          ) friendships1 INNER JOIN (
+            SELECT *
+            FROM friendships
+            WHERE user_id = $2
+          ) friendships2
+            ON friendships1.friend_id = friendships2.friend_id
+          SQL
+
+          common_friend_ids =
+            if user && friend
+              result = ActiveRecord::Base.connection.raw_connection.execute(query, [user.id, friend.id])
+              result.map { |row| row[column_name] }
+            else
+              []
+            end
+
+          common_friends = User.where(id: common_friend_ids)
+
+          {success: true, friends: common_friends.map(&:email), count: common_friends.size}
+        end
       end
     end
   end
