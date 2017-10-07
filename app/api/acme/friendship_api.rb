@@ -23,13 +23,7 @@ module Acme
       end
 
       get do
-        user = User.find_by(email: params[:email])
-
-        friends = if user
-                    user.friendships.map(&:friend)
-                  else
-                    Friendship.none
-                  end
+        friends = Friendship.for(email: params[:email]).map(&:friend)
 
         {success: true, friends: friends.map(&:email), count: friends.size}
       end

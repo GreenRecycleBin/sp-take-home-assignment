@@ -11,4 +11,14 @@ class Friendship < ApplicationRecord
       friend.friendships.find_or_create_by(friend: user)
     end
   end
+
+  def self.for(email:)
+    user = User.find_by(email: email)
+
+    if user
+      user.friendships
+    else
+      none
+    end
+  end
 end
