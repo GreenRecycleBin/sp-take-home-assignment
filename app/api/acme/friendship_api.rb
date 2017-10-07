@@ -4,9 +4,15 @@ require 'valid_emails'
 
 module Acme
   class FriendshipAPI < Grape::API
+    helpers do
+      params :friends do
+        requires :friends, type: Array[String], size: 2, valid_emails: true, fail_fast: true
+      end
+    end
+
     resource :friendship do
       params do
-        requires :friends, type: Array[String], size: 2, valid_emails: true, fail_fast: true
+        use :friends
       end
 
       post do
@@ -26,6 +32,14 @@ module Acme
         friends = Friendship.for(email: params[:email]).map(&:friend)
 
         {success: true, friends: friends.map(&:email), count: friends.size}
+      end
+
+      namespace :common do
+        params do
+          use :friends
+        end
+
+        get {}
       end
     end
   end
