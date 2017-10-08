@@ -1,3 +1,5 @@
+require 'set'
+
 module Acme
   class UpdateAPI < Grape::API
     helpers do
@@ -13,6 +15,11 @@ module Acme
       end
 
       post do
+        requestor = User.find_or_create_by(email: params[:requestor])
+        target = User.find_or_create_by(email: params[:target])
+
+        requestor.follows.find_or_create_by(target: target)
+
         {success: true}
       end
 
@@ -21,7 +28,23 @@ module Acme
         requires :text, type: String, fail_fast: true
       end
 
-      get {}
+      get do
+        sender = User.find_by(email: params[:sender])
+        recipients = Friendship.for(email: params[:sender]).map(&:friend)
+
+        if sender
+          recipients += sender.followers
+        end
+
+        mentioned_emails = params[:text].scan(Validator::RELAXED_EMAIL_REGEXP)
+        recipient_emails = Set.new(recipients.map(&:email) + mentioned_emails)
+
+        if sender
+          recipient_emails -= sender.block_users.map(&:email)
+        end
+
+        {success: true, recipients: recipient_emails}
+      end
 
       namespace :block do
         params do

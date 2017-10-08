@@ -1,3 +1,15 @@
+def block_update(a, b)
+  unless post('/api/update/block', params: {requestor: a, target: b}) == 201
+    raise "Failed to block update from #{b} to #{a}."
+  end
+end
+
+def subscribe_update(a, b)
+  unless post('/api/update', params: {requestor: a, target: b}) == 201
+    raise "Failed to subscribe to update from #{b} to #{a}."
+  end
+end
+
 describe Acme::UpdateAPI do
   describe 'POST' do
     context 'without params[:requestor]' do
@@ -198,6 +210,337 @@ describe Acme::UpdateAPI do
           subject { get '/api/update', params: {sender: sender, text: text} }
 
           let(:sender) { 'a@example.com' }
+
+          context 'when given an email address' do
+            # 1. Has blocked update from sender
+            # 2. Has a friend connection with sender
+            # 3. Has subscribed to updates from sender
+            # 4. Hash been @mentioned in the update
+            context '#<Set: {}>' do
+              let(:text) { '' }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: []}.to_json)
+              end
+            end
+
+            context '#<Set: {1}>' do
+              before { block_update(target, sender) }
+
+              let(:target) { 'b@example.com' }
+              let(:text) { '' }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: []}.to_json)
+              end
+            end
+
+            context '#<Set: {2}>' do
+              before { add_friendship(target, sender) }
+
+              let(:target) { 'b@example.com' }
+              let(:text) { '' }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: [target]}.to_json)
+              end
+            end
+
+            context '#<Set: {3}>' do
+              before { subscribe_update(target, sender) }
+
+              let(:target) { 'b@example.com' }
+              let(:text) { '' }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: [target]}.to_json)
+              end
+            end
+
+            context '#<Set: {4}>' do
+              let(:target) { 'b@example.com' }
+              let(:text) { "Hello, #{target}" }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: [target]}.to_json)
+              end
+            end
+
+            context '#<Set: {1, 2}>' do
+              before do
+                add_friendship(target, sender)
+                block_update(target, sender)
+              end
+
+              let(:target) { 'b@example.com' }
+              let(:text) { '' }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: []}.to_json)
+              end
+            end
+
+            context '#<Set: {1, 3}>' do
+              before do
+                block_update(target, sender)
+                subscribe_update(target, sender)
+              end
+
+              let(:target) { 'b@example.com' }
+              let(:text) { '' }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: []}.to_json)
+              end
+            end
+
+            context '#<Set: {1, 4}>' do
+              before { block_update(target, sender) }
+
+              let(:target) { 'b@example.com' }
+              let(:text) { "Hello, #{target}" }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: []}.to_json)
+              end
+            end
+
+            context '#<Set: {2, 3}>' do
+              before do
+                add_friendship(target, sender)
+                subscribe_update(target, sender)
+              end
+
+              let(:target) { 'b@example.com' }
+              let(:text) { '' }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: [target]}.to_json)
+              end
+            end
+
+            context '#<Set: {2, 4}>' do
+              before { add_friendship(target, sender) }
+
+              let(:target) { 'b@example.com' }
+              let(:text) { "Hello, #{target}" }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: [target]}.to_json)
+              end
+            end
+
+            context '#<Set: {3, 4}>' do
+              before { subscribe_update(target, sender) }
+
+              let(:target) { 'b@example.com' }
+              let(:text) { "Hello, #{target}" }
+
+              it 'returns 200' do
+                subject
+
+                expect(response).to have_http_status(:ok)
+              end
+
+              it 'returns the correct body' do
+                subject
+
+                expect(response.body).to eq({success: true, recipients: [target]}.to_json)
+              end
+            end
+          end
+
+          context '#<Set: {1, 2, 3}>' do
+            before do
+              add_friendship(target, sender)
+              subscribe_update(target, sender)
+              block_update(target, sender)
+            end
+
+            let(:target) { 'b@example.com' }
+            let(:text) { '' }
+
+            it 'returns 200' do
+              subject
+
+              expect(response).to have_http_status(:ok)
+            end
+
+            it 'returns the correct body' do
+              subject
+
+              expect(response.body).to eq({success: true, recipients: []}.to_json)
+            end
+          end
+
+          context '#<Set: {1, 2, 4}>' do
+            before do
+              add_friendship(target, sender)
+              block_update(target, sender)
+            end
+
+            let(:target) { 'b@example.com' }
+            let(:text) { "Hello, #{target}" }
+
+            it 'returns 200' do
+              subject
+
+              expect(response).to have_http_status(:ok)
+            end
+
+            it 'returns the correct body' do
+              subject
+
+              expect(response.body).to eq({success: true, recipients: []}.to_json)
+            end
+          end
+
+          context '#<Set: {1, 3, 4}>' do
+            before do
+              subscribe_update(target, sender)
+              block_update(target, sender)
+            end
+
+            let(:target) { 'b@example.com' }
+            let(:text) { "Hello, #{target}" }
+
+            it 'returns 200' do
+              subject
+
+              expect(response).to have_http_status(:ok)
+            end
+
+            it 'returns the correct body' do
+              subject
+
+              expect(response.body).to eq({success: true, recipients: []}.to_json)
+            end
+          end
+
+          context '#<Set: {2, 3, 4}>' do
+            before do
+              add_friendship(target, sender)
+              subscribe_update(target, sender)
+            end
+
+            let(:target) { 'b@example.com' }
+            let(:text) { "Hello, #{target}" }
+
+            it 'returns 200' do
+              subject
+
+              expect(response).to have_http_status(:ok)
+            end
+
+            it 'returns the correct body' do
+              subject
+
+              expect(response.body).to eq({success: true, recipients: [target]}.to_json)
+            end
+          end
+
+          context '#<Set: {1, 2, 3, 4}>' do
+            before do
+              add_friendship(target, sender)
+              subscribe_update(target, sender)
+              block_update(target, sender)
+            end
+
+            let(:target) { 'b@example.com' }
+            let(:text) { "Hello, #{target}" }
+
+            it 'returns 200' do
+              subject
+
+              expect(response).to have_http_status(:ok)
+            end
+
+            it 'returns the correct body' do
+              subject
+
+              expect(response.body).to eq({success: true, recipients: []}.to_json)
+            end
+          end
 
           context 'when not given a String' do
             let(:text) { [] }
