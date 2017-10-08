@@ -4,4 +4,6 @@ class MyAPI < Grape::API
 
   mount Acme::FriendshipAPI
   mount Acme::UpdateAPI
+
+  add_swagger_documentation
 end

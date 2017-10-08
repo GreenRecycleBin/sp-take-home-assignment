@@ -47,3 +47,4 @@ gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw, :jruby]
 gem 'grape', '~> 1'
 gem 'hashie-forbidden_attributes', '~> 0.1.1'
 gem 'pg', '~> 0'
+gem 'grape-swagger', '~> 0'
