@@ -44,9 +44,10 @@ class Friendship < ApplicationRecord
       ON friendships1.friend_id = friendships2.friend_id
     SQL
 
-    result = ActiveRecord::Base.connection.raw_connection.execute(query, [user.id, friend.id])
-    common_friend_ids = result.map { |row| row[column_name] }
+    ActiveRecord::Base.connection.raw_connection.exec_params(query, [user.id, friend.id]) do |result|
+      common_friend_ids = result.map { |row| row[column_name] }
 
-    User.where(id: common_friend_ids)
+      User.where(id: common_friend_ids)
+    end
   end
 end
