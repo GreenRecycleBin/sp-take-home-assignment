@@ -15,10 +15,7 @@ module Acme
       end
 
       post do
-        requestor = User.find_or_create_by(email: params[:requestor])
-        target = User.find_or_create_by(email: params[:target])
-
-        requestor.follows.find_or_create_by(target: target)
+        Subscription.add(requestor_email: params[:requestor], target_email: params[:target])
 
         {success: true}
       end
